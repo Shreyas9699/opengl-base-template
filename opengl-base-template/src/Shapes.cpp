@@ -1,5 +1,4 @@
 #include "Shapes.h"
-
 #include <cmath>
 
 void Shapes::applyZoomAndRotation(CameraSettings& cam)

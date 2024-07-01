@@ -16,9 +16,19 @@ struct CameraSettings
 	float rotationY = 0.0f;
 	bool isDragging = false;
 	double lastX = 0, lastY = 0;
+
+	void reset() 
+	{
+		zoom = 1.0f;
+		rotationX = 0.0f;
+		rotationY = 0.0f;
+		isDragging = false;
+		lastX = 0, lastY = 0;
+	}
 };
 
-class Shapes {
+class Shapes 
+{
 public:
 	ImVec4 color;
 	bool is3D;

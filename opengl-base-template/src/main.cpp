@@ -1,6 +1,3 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <glm/glm.hpp>
@@ -9,7 +6,6 @@
 
 #include <iostream>
 #include <algorithm>
-#include <cmath>
 
 #include "Shapes.h"
 
@@ -77,6 +73,10 @@ int main()
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_LIGHTING);
+
+    glEnable(GL_POLYGON_SMOOTH);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
     // Setup ImGui binding
     IMGUI_CHECKVERSION();
