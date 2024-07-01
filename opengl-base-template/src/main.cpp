@@ -8,11 +8,20 @@
 #include <algorithm>
 
 #include "Shapes.h"
+#include "Material.h"
 
 int windowWidth = 1280;
 int windowHeight = 900;
 
 CameraSettings cam;
+
+static int current_material_index = 0;
+MaterialProperty mat_prop;
+
+void updateMaterialProperty(int index) 
+{
+    mat_prop = getMaterialProperties(static_cast<MaterialType>(index));
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -104,12 +113,18 @@ int main()
     Shape currentShape = NONE;
     Shapes obj(false);
 
+    glm::vec3 bgColor = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    std::vector<const char*> material_names;
+    for (const auto& name : material_types) 
+    {
+        material_names.push_back(name.c_str());
+    }
+
     // Variables for light properties
     ImVec4 lightAmbient = ImVec4(light_ambient[0], light_ambient[1], light_ambient[2], light_ambient[3]);
     ImVec4 lightDiffuse = ImVec4(light_diffuse[0], light_diffuse[1], light_diffuse[2], light_diffuse[3]);
     ImVec4 lightSpecular = ImVec4(light_specular[0], light_specular[1], light_specular[2], light_specular[3]);
-
-    MaterialProperty mat_prop;
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -122,65 +137,86 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Create ImGui windows
-        ImGui::Begin("Shape Selector");
-        if (ImGui::Button("Circle")) currentShape = CIRCLE;
-        if (ImGui::Button("Triangle")) currentShape = TRIANGLE;
-        if (ImGui::Button("Rectangle")) currentShape = RECTANGLE;
-        if (ImGui::Button("Square")) currentShape = SQUARE;
-        ImGui::Checkbox("3D Mode", &obj.is3D);
-        ImGui::End();
+        // ImGui window for Shape properties
+        {
+            ImGui::Begin("Shape Selector");
+            if (ImGui::Button("Circle")) currentShape = CIRCLE;
+            if (ImGui::Button("Triangle")) currentShape = TRIANGLE;
+            if (ImGui::Button("Rectangle")) currentShape = RECTANGLE;
+            if (ImGui::Button("Square")) currentShape = SQUARE;
+            ImGui::Checkbox("3D Mode", &obj.is3D);
+            ImGui::Text("Background Color:");
+            ImGui::ColorEdit3("Background", (float*)&bgColor);
+            ImGui::End();
+        }
 
-        ImGui::Begin("Controls");
-        ImGui::SliderFloat("Zoom", &cam.zoom, 0.1f, 5.0f);
-        ImGui::SliderFloat("Rotation X", &cam.rotationX, -360.0f, 360.0f);
-        ImGui::SliderFloat("Rotation Y", &cam.rotationY, -360.0f, 360.0f);
-        if (ImGui::Button("Reset")) { cam.reset(); }
-        ImGui::End();
+        // ImGui window for rotational controls and resetting
+        {
+            ImGui::Begin("Controls");
+            ImGui::SliderFloat("Zoom", &cam.zoom, 0.1f, 5.0f);
+            ImGui::SliderFloat("Rotation X", &cam.rotationX, -360.0f, 360.0f);
+            ImGui::SliderFloat("Rotation Y", &cam.rotationY, -360.0f, 360.0f);
+            if (ImGui::Button("Reset")) { cam.reset(); }
 
-        ImGui::Begin("Light Properties");
-        ImGui::Text("Ambient:");
-        ImGui::SliderFloat("R", &lightAmbient.x, 0.0f, 1.0f);
-        ImGui::SliderFloat("G", &lightAmbient.y, 0.0f, 1.0f);
-        ImGui::SliderFloat("B", &lightAmbient.z, 0.0f, 1.0f);
-        ImGui::SliderFloat("A", &lightAmbient.w, 0.0f, 1.0f);
+            ImGui::End();
+        }
 
-        // Color picker for Diffuse ('color' is a vec4)
-        ImGui::Text("Diffuse:");
-        ImGui::ColorEdit3("Color", (float*)&lightDiffuse);
+        // ImGui window for Material properties
+        {
+            ImGui::Begin("Material Properties");
 
-        // Sliders for Specular
-        ImGui::Text("Specular:");
-        ImGui::SliderFloat("R ", &lightSpecular.x, 0.0f, 1.0f);
-        ImGui::SliderFloat("G ", &lightSpecular.y, 0.0f, 1.0f);
-        ImGui::SliderFloat("B ", &lightSpecular.z, 0.0f, 1.0f);
-        ImGui::SliderFloat("A ", &lightSpecular.w, 0.0f, 1.0f);
-        ImGui::End();
+            ImGui::Text("Select Material:");
+            if (ImGui::Combo("Material Type", &current_material_index, material_names.data(), material_names.size())) 
+            {
+                updateMaterialProperty(current_material_index);
+            }
 
-        ImGui::Begin("Material Properties");
-        // Sliders for Ambient
-        ImGui::Text("Ambient:");
-        ImGui::SliderFloat("R", &mat_prop.mat_ambient[0], 0.0f, 1.0f);
-        ImGui::SliderFloat("G", &mat_prop.mat_ambient[1], 0.0f, 1.0f);
-        ImGui::SliderFloat("B", &mat_prop.mat_ambient[2], 0.0f, 1.0f);
-        ImGui::SliderFloat("A", &mat_prop.mat_ambient[3], 0.0f, 1.0f);
+            // Sliders for Ambient
+            ImGui::Text("Ambient:");
+            ImGui::SliderFloat("R", &mat_prop.mat_ambient[0], 0.0f, 1.0f);
+            ImGui::SliderFloat("G", &mat_prop.mat_ambient[1], 0.0f, 1.0f);
+            ImGui::SliderFloat("B", &mat_prop.mat_ambient[2], 0.0f, 1.0f);
+            ImGui::SliderFloat("A", &mat_prop.mat_ambient[3], 0.0f, 1.0f);
 
-        // Color picker for Diffuse ('color' is a vec4)
-        ImGui::Text("Diffuse:");
-        ImGui::ColorEdit3("Color", (float*)&mat_prop.mat_diffuse);
+            // Color picker for Diffuse ('color' is a vec4)
+            ImGui::Text("Diffuse:");
+            ImGui::ColorEdit3("Color", (float*)&mat_prop.mat_diffuse);
 
-        // Sliders for Specular
-        ImGui::Text("Specular:");
-        ImGui::SliderFloat("R ", &mat_prop.mat_specular[0], 0.0f, 1.0f);
-        ImGui::SliderFloat("G ", &mat_prop.mat_specular[1], 0.0f, 1.0f);
-        ImGui::SliderFloat("B ", &mat_prop.mat_specular[2], 0.0f, 1.0f);
-        ImGui::SliderFloat("A ", &mat_prop.mat_specular[3], 0.0f, 1.0f);
+            // Sliders for Specular
+            ImGui::Text("Specular:");
+            ImGui::SliderFloat("R ", &mat_prop.mat_specular[0], 0.0f, 1.0f);
+            ImGui::SliderFloat("G ", &mat_prop.mat_specular[1], 0.0f, 1.0f);
+            ImGui::SliderFloat("B ", &mat_prop.mat_specular[2], 0.0f, 1.0f);
+            ImGui::SliderFloat("A ", &mat_prop.mat_specular[3], 0.0f, 1.0f);
 
-        // Slider for Shininess
-        ImGui::Text("Shininess:");
-        ImGui::SliderFloat("Value", &mat_prop.mat_shininess, 1.0f, 128.0f); // Adjust max shininess as needed
+            // Slider for Shininess
+            ImGui::Text("Shininess:");
+            ImGui::SliderFloat("Value", &mat_prop.mat_shininess, 1.0f, 128.0f); // Adjust max shininess as needed
 
-        ImGui::End();
+            ImGui::End();
+        }
+
+        // ImGui window for Light properties
+        {
+            ImGui::Begin("Light Properties");
+            ImGui::Text("Ambient:");
+            ImGui::SliderFloat("R", &lightAmbient.x, 0.0f, 1.0f);
+            ImGui::SliderFloat("G", &lightAmbient.y, 0.0f, 1.0f);
+            ImGui::SliderFloat("B", &lightAmbient.z, 0.0f, 1.0f);
+            ImGui::SliderFloat("A", &lightAmbient.w, 0.0f, 1.0f);
+
+            // Color picker for Diffuse ('color' is a vec4)
+            ImGui::Text("Diffuse:");
+            ImGui::ColorEdit3("Color", (float*)&lightDiffuse);
+
+            // Sliders for Specular
+            ImGui::Text("Specular:");
+            ImGui::SliderFloat("R ", &lightSpecular.x, 0.0f, 1.0f);
+            ImGui::SliderFloat("G ", &lightSpecular.y, 0.0f, 1.0f);
+            ImGui::SliderFloat("B ", &lightSpecular.z, 0.0f, 1.0f);
+            ImGui::SliderFloat("A ", &lightSpecular.w, 0.0f, 1.0f);
+            ImGui::End();
+        }
 
         // Handle mouse dragging for rotation
         if (cam.isDragging)
@@ -205,7 +241,7 @@ int main()
         glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
 
         // Rendering
-        glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
+        glClearColor(bgColor.x, bgColor.y, bgColor.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Set up perspective projection with GLM
