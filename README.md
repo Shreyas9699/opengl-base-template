@@ -34,3 +34,12 @@ It offers a streamlined setup and boilerplate code to kickstart your projects qu
 3. In the `proj-new-name.sln`, update the Project value from `opengl-base-template\opengl-base-template.vcxproj` to `proj-new-name\proj-new-name.vcxproj`
 
 4. Now open the  double click on the `proj-new-name.sln` file, and you should be able to run it under new project name. (_make sure to change the architecture to `Win32`_)
+
+## Sample application (2D and 3D rendering)
+### Description
+
+A simple rendering application that uses OpenGL and Dear ImGUI to render 2D and 3D shapes and allow user to select different shapes, properties such as light and material, etc.
+Below is the demo video of application in use.
+
+https://github.com/Shreyas9699/opengl-base-template/assets/63774467/79d4212a-b184-4613-8c01-6696e7cb78bd
+
