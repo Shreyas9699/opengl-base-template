@@ -17,7 +17,7 @@ struct CameraSettings
 	bool isDragging = false;
 	double lastX = 0, lastY = 0;
 
-	void reset() 
+	void reset()
 	{
 		zoom = 1.0f;
 		rotationX = 0.0f;
@@ -27,7 +27,7 @@ struct CameraSettings
 	}
 };
 
-class Shapes 
+class Shapes
 {
 public:
 	ImVec4 color;

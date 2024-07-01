@@ -9,10 +9,6 @@
 
 #include "Shapes.h"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846  // Define your own value of PI
-#endif
-
 int windowWidth = 1440;
 int windowHeight = 800;
 
@@ -123,6 +119,7 @@ int main()
         ImGui::SliderFloat("Zoom", &cam.zoom, 0.1f, 5.0f);
         ImGui::SliderFloat("Rotation X", &cam.rotationX, -360.0f, 360.0f);
         ImGui::SliderFloat("Rotation Y", &cam.rotationY, -360.0f, 360.0f);
+        if (ImGui::Button("Reset")) { cam.reset(); }
         ImGui::End();
 
         // Handle mouse dragging for rotation
