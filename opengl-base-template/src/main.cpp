@@ -9,8 +9,8 @@
 
 #include "Shapes.h"
 
-int windowWidth = 1440;
-int windowHeight = 800;
+int windowWidth = 1280;
+int windowHeight = 900;
 
 CameraSettings cam;
 
@@ -69,7 +69,20 @@ int main()
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_LIGHTING);
+
+    // Enable lighting
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0); // You can use GL_LIGHT1, GL_LIGHT2, etc., for multiple lights
+
+    // Set light source properties
+    GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f }; // Directional light from the top right
+    GLfloat light_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat light_diffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+    GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
 
     glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -89,9 +102,14 @@ int main()
     // Variables to store the current shape to draw
     enum Shape { NONE, CIRCLE, TRIANGLE, RECTANGLE, SQUARE };
     Shape currentShape = NONE;
-    ImVec4 tempColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-    Shapes obj(tempColor, false);
+    Shapes obj(false);
 
+    // Variables for light properties
+    ImVec4 lightAmbient = ImVec4(light_ambient[0], light_ambient[1], light_ambient[2], light_ambient[3]);
+    ImVec4 lightDiffuse = ImVec4(light_diffuse[0], light_diffuse[1], light_diffuse[2], light_diffuse[3]);
+    ImVec4 lightSpecular = ImVec4(light_specular[0], light_specular[1], light_specular[2], light_specular[3]);
+
+    MaterialProperty mat_prop;
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -110,8 +128,6 @@ int main()
         if (ImGui::Button("Triangle")) currentShape = TRIANGLE;
         if (ImGui::Button("Rectangle")) currentShape = RECTANGLE;
         if (ImGui::Button("Square")) currentShape = SQUARE;
-        ImGui::ColorEdit3("Shape Color", (float*)&tempColor);
-        obj.color = tempColor;
         ImGui::Checkbox("3D Mode", &obj.is3D);
         ImGui::End();
 
@@ -120,6 +136,50 @@ int main()
         ImGui::SliderFloat("Rotation X", &cam.rotationX, -360.0f, 360.0f);
         ImGui::SliderFloat("Rotation Y", &cam.rotationY, -360.0f, 360.0f);
         if (ImGui::Button("Reset")) { cam.reset(); }
+        ImGui::End();
+
+        ImGui::Begin("Light Properties");
+        ImGui::Text("Ambient:");
+        ImGui::SliderFloat("R", &lightAmbient.x, 0.0f, 1.0f);
+        ImGui::SliderFloat("G", &lightAmbient.y, 0.0f, 1.0f);
+        ImGui::SliderFloat("B", &lightAmbient.z, 0.0f, 1.0f);
+        ImGui::SliderFloat("A", &lightAmbient.w, 0.0f, 1.0f);
+
+        // Color picker for Diffuse ('color' is a vec4)
+        ImGui::Text("Diffuse:");
+        ImGui::ColorEdit3("Color", (float*)&lightDiffuse);
+
+        // Sliders for Specular
+        ImGui::Text("Specular:");
+        ImGui::SliderFloat("R ", &lightSpecular.x, 0.0f, 1.0f);
+        ImGui::SliderFloat("G ", &lightSpecular.y, 0.0f, 1.0f);
+        ImGui::SliderFloat("B ", &lightSpecular.z, 0.0f, 1.0f);
+        ImGui::SliderFloat("A ", &lightSpecular.w, 0.0f, 1.0f);
+        ImGui::End();
+
+        ImGui::Begin("Material Properties");
+        // Sliders for Ambient
+        ImGui::Text("Ambient:");
+        ImGui::SliderFloat("R", &mat_prop.mat_ambient[0], 0.0f, 1.0f);
+        ImGui::SliderFloat("G", &mat_prop.mat_ambient[1], 0.0f, 1.0f);
+        ImGui::SliderFloat("B", &mat_prop.mat_ambient[2], 0.0f, 1.0f);
+        ImGui::SliderFloat("A", &mat_prop.mat_ambient[3], 0.0f, 1.0f);
+
+        // Color picker for Diffuse ('color' is a vec4)
+        ImGui::Text("Diffuse:");
+        ImGui::ColorEdit3("Color", (float*)&mat_prop.mat_diffuse);
+
+        // Sliders for Specular
+        ImGui::Text("Specular:");
+        ImGui::SliderFloat("R ", &mat_prop.mat_specular[0], 0.0f, 1.0f);
+        ImGui::SliderFloat("G ", &mat_prop.mat_specular[1], 0.0f, 1.0f);
+        ImGui::SliderFloat("B ", &mat_prop.mat_specular[2], 0.0f, 1.0f);
+        ImGui::SliderFloat("A ", &mat_prop.mat_specular[3], 0.0f, 1.0f);
+
+        // Slider for Shininess
+        ImGui::Text("Shininess:");
+        ImGui::SliderFloat("Value", &mat_prop.mat_shininess, 1.0f, 128.0f); // Adjust max shininess as needed
+
         ImGui::End();
 
         // Handle mouse dragging for rotation
@@ -135,6 +195,15 @@ int main()
             cam.lastY = ypos;
         }
 
+        // Update light properties
+        GLfloat light_ambient[] = { lightAmbient.x, lightAmbient.y, lightAmbient.z, lightAmbient.w };
+        GLfloat light_diffuse[] = { lightDiffuse.x, lightDiffuse.y, lightDiffuse.z, lightDiffuse.w };
+        GLfloat light_specular[] = { lightSpecular.x, lightSpecular.y, lightSpecular.z, lightSpecular.w };
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+
         // Rendering
         glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -144,20 +213,28 @@ int main()
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(glm::value_ptr(projection));
 
+        // Set up view matrix (camera transformation)
+        glm::mat4 view = glm::mat4(1.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -cam.zoom));
+        view = glm::rotate(view, glm::radians(cam.rotationX), glm::vec3(1.0f, 0.0f, 0.0f));
+        view = glm::rotate(view, glm::radians(cam.rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(glm::value_ptr(view));
+
         // Draw the selected shape
         switch (currentShape)
         {
         case CIRCLE:
-            obj.drawCircle(cam);
+            obj.drawCircle(cam, mat_prop);
             break;
         case TRIANGLE:
-            obj.drawTriangle(cam);
+            obj.drawTriangle(cam, mat_prop);
             break;
         case RECTANGLE:
-            obj.drawRect(cam);
+            obj.drawRect(cam, mat_prop);
             break;
         case SQUARE:
-            obj.drawSquare(cam);
+            obj.drawSquare(cam, mat_prop);
             break;
         default:
             break;

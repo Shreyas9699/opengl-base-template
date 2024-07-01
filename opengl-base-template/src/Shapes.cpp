@@ -11,19 +11,22 @@ void Shapes::applyZoomAndRotation(CameraSettings& cam)
     glRotatef(cam.rotationY, 0.0f, 1.0f, 0.0f);
 }
 
-void Shapes::drawCircle(CameraSettings& cam)
+void Shapes::drawCircle(CameraSettings& cam, MaterialProperty& mat_prop)
 {
     glPushMatrix();
     applyZoomAndRotation(cam);
 
-    glColor4f(this->color.x, this->color.y, this->color.z, this->color.w);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_prop.mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_prop.mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_prop.mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, &mat_prop.mat_shininess);
+
     int numSegments = 200;
     float radius = 0.5f;
     float angleStep = 2.0f * M_PI / numSegments;
 
     if (this->is3D)
     {
-        // Draw a sphere
         for (int j = 0; j <= numSegments; j++)
         {
             float theta1 = j * M_PI / numSegments;
@@ -43,15 +46,18 @@ void Shapes::drawCircle(CameraSettings& cam)
                 float y2 = radius * sin(phi) * sin(theta2);
                 float z2 = radius * cos(theta2);
 
+                glNormal3f(x1, y1, z1);
                 glVertex3f(x1, y1, z1);
+                glNormal3f(x2, y2, z2);
                 glVertex3f(x2, y2, z2);
             }
             glEnd();
         }
     }
-    else {
+    else
+    {
         glBegin(GL_TRIANGLE_FAN);
-        glVertex2f(0.0f, 0.0f); // Center of circle
+        glVertex2f(0.0f, 0.0f);
         for (int i = 0; i <= numSegments; i++)
         {
             float newX = radius * cos(angleStep * i);
@@ -64,164 +70,215 @@ void Shapes::drawCircle(CameraSettings& cam)
     glPopMatrix();
 }
 
-void Shapes::drawRect(CameraSettings& cam)
+void Shapes::drawRect(CameraSettings& cam, MaterialProperty& mat_prop)
 {
     glPushMatrix();
     applyZoomAndRotation(cam);
 
-    glColor4f(this->color.x, this->color.y, this->color.z, this->color.w);
+    // Set material properties
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_prop.mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_prop.mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_prop.mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, &mat_prop.mat_shininess);
+
+    float width = 1.0f;
+    float height = 0.5f;
 
     if (this->is3D)
     {
-        // Draw a cuboid
-        float width = 1.0f;   // Width of the cuboid
-        float height = 0.5f;  // Height of the cuboid
-        float depth = 0.3f;   // Depth of the cuboid
-
+        float depth = 0.2f;
         glBegin(GL_QUADS);
+
         // Front face
+        glNormal3f(0.0f, 0.0f, 1.0f);
         glVertex3f(-width / 2, -height / 2, depth / 2);
         glVertex3f(width / 2, -height / 2, depth / 2);
         glVertex3f(width / 2, height / 2, depth / 2);
         glVertex3f(-width / 2, height / 2, depth / 2);
 
         // Back face
-        glVertex3f(-width / 2, -height / 2, -depth / 2);
-        glVertex3f(-width / 2, height / 2, -depth / 2);
-        glVertex3f(width / 2, height / 2, -depth / 2);
-        glVertex3f(width / 2, -height / 2, -depth / 2);
-
-        // Top face
-        glVertex3f(-width / 2, height / 2, -depth / 2);
-        glVertex3f(-width / 2, height / 2, depth / 2);
-        glVertex3f(width / 2, height / 2, depth / 2);
-        glVertex3f(width / 2, height / 2, -depth / 2);
-
-        // Bottom face
+        glNormal3f(0.0f, 0.0f, -1.0f);
         glVertex3f(-width / 2, -height / 2, -depth / 2);
         glVertex3f(width / 2, -height / 2, -depth / 2);
-        glVertex3f(width / 2, -height / 2, depth / 2);
-        glVertex3f(-width / 2, -height / 2, depth / 2);
-
-        // Right face
-        glVertex3f(width / 2, -height / 2, -depth / 2);
         glVertex3f(width / 2, height / 2, -depth / 2);
-        glVertex3f(width / 2, height / 2, depth / 2);
-        glVertex3f(width / 2, -height / 2, depth / 2);
+        glVertex3f(-width / 2, height / 2, -depth / 2);
 
         // Left face
+        glNormal3f(-1.0f, 0.0f, 0.0f);
         glVertex3f(-width / 2, -height / 2, -depth / 2);
         glVertex3f(-width / 2, -height / 2, depth / 2);
         glVertex3f(-width / 2, height / 2, depth / 2);
         glVertex3f(-width / 2, height / 2, -depth / 2);
+
+        // Right face
+        glNormal3f(1.0f, 0.0f, 0.0f);
+        glVertex3f(width / 2, -height / 2, -depth / 2);
+        glVertex3f(width / 2, -height / 2, depth / 2);
+        glVertex3f(width / 2, height / 2, depth / 2);
+        glVertex3f(width / 2, height / 2, -depth / 2);
+
+        // Top face
+        glNormal3f(0.0f, 1.0f, 0.0f);
+        glVertex3f(-width / 2, height / 2, -depth / 2);
+        glVertex3f(width / 2, height / 2, -depth / 2);
+        glVertex3f(width / 2, height / 2, depth / 2);
+        glVertex3f(-width / 2, height / 2, depth / 2);
+
+        // Bottom face
+        glNormal3f(0.0f, -1.0f, 0.0f);
+        glVertex3f(-width / 2, -height / 2, -depth / 2);
+        glVertex3f(width / 2, -height / 2, -depth / 2);
+        glVertex3f(width / 2, -height / 2, depth / 2);
+        glVertex3f(-width / 2, -height / 2, depth / 2);
 
         glEnd();
     }
     else
     {
         glBegin(GL_QUADS);
-        glVertex2f(-0.75f, 0.25f);  // Top-left
-        glVertex2f(0.75f, 0.25f);   // Top-right
-        glVertex2f(0.75f, -0.25f);  // Bottom-right
-        glVertex2f(-0.75f, -0.25f); // Bottom-left
+        glVertex2f(-width / 2, -height / 2);
+        glVertex2f(width / 2, -height / 2);
+        glVertex2f(width / 2, height / 2);
+        glVertex2f(-width / 2, height / 2);
         glEnd();
     }
 
     glPopMatrix();
 }
 
-void Shapes::drawSquare(CameraSettings& cam)
+void Shapes::drawSquare(CameraSettings& cam, MaterialProperty& mat_prop)
 {
     glPushMatrix();
     applyZoomAndRotation(cam);
 
-    glColor4f(this->color.x, this->color.y, this->color.z, this->color.w);
-    float size = 0.5f;  // Half the size of the square
+    // Set material properties
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_prop.mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_prop.mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_prop.mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, &mat_prop.mat_shininess);
+
+    float size = 0.5f;
 
     if (this->is3D)
     {
-        // Draw a cube
         glBegin(GL_QUADS);
+
         // Front face
-        glVertex3f(-size, -size, size);
-        glVertex3f(size, -size, size);
-        glVertex3f(size, size, size);
-        glVertex3f(-size, size, size);
+        glNormal3f(0.0f, 0.0f, 1.0f);
+        glVertex3f(-size / 2, -size / 2, size / 2);
+        glVertex3f(size / 2, -size / 2, size / 2);
+        glVertex3f(size / 2, size / 2, size / 2);
+        glVertex3f(-size / 2, size / 2, size / 2);
+
         // Back face
-        glVertex3f(-size, -size, -size);
-        glVertex3f(-size, size, -size);
-        glVertex3f(size, size, -size);
-        glVertex3f(size, -size, -size);
-        // Top face
-        glVertex3f(-size, size, -size);
-        glVertex3f(-size, size, size);
-        glVertex3f(size, size, size);
-        glVertex3f(size, size, -size);
-        // Bottom face
-        glVertex3f(-size, -size, -size);
-        glVertex3f(size, -size, -size);
-        glVertex3f(size, -size, size);
-        glVertex3f(-size, -size, size);
-        // Right face
-        glVertex3f(size, -size, -size);
-        glVertex3f(size, size, -size);
-        glVertex3f(size, size, size);
-        glVertex3f(size, -size, size);
+        glNormal3f(0.0f, 0.0f, -1.0f);
+        glVertex3f(-size / 2, -size / 2, -size / 2);
+        glVertex3f(size / 2, -size / 2, -size / 2);
+        glVertex3f(size / 2, size / 2, -size / 2);
+        glVertex3f(-size / 2, size / 2, -size / 2);
+
         // Left face
-        glVertex3f(-size, -size, -size);
-        glVertex3f(-size, -size, size);
-        glVertex3f(-size, size, size);
-        glVertex3f(-size, size, -size);
+        glNormal3f(-1.0f, 0.0f, 0.0f);
+        glVertex3f(-size / 2, -size / 2, -size / 2);
+        glVertex3f(-size / 2, -size / 2, size / 2);
+        glVertex3f(-size / 2, size / 2, size / 2);
+        glVertex3f(-size / 2, size / 2, -size / 2);
+
+        // Right face
+        glNormal3f(1.0f, 0.0f, 0.0f);
+        glVertex3f(size / 2, -size / 2, -size / 2);
+        glVertex3f(size / 2, -size / 2, size / 2);
+        glVertex3f(size / 2, size / 2, size / 2);
+        glVertex3f(size / 2, size / 2, -size / 2);
+
+        // Top face
+        glNormal3f(0.0f, 1.0f, 0.0f);
+        glVertex3f(-size / 2, size / 2, -size / 2);
+        glVertex3f(size / 2, size / 2, -size / 2);
+        glVertex3f(size / 2, size / 2, size / 2);
+        glVertex3f(-size / 2, size / 2, size / 2);
+
+        // Bottom face
+        glNormal3f(0.0f, -1.0f, 0.0f);
+        glVertex3f(-size / 2, -size / 2, -size / 2);
+        glVertex3f(size / 2, -size / 2, -size / 2);
+        glVertex3f(size / 2, -size / 2, size / 2);
+        glVertex3f(-size / 2, -size / 2, size / 2);
+
         glEnd();
     }
     else
     {
         glBegin(GL_QUADS);
-        glVertex2f(-size, size);   // Top-left
-        glVertex2f(size, size);    // Top-right
-        glVertex2f(size, -size);   // Bottom-right
-        glVertex2f(-size, -size);  // Bottom-left
+        glVertex2f(-size / 2, -size / 2);
+        glVertex2f(size / 2, -size / 2);
+        glVertex2f(size / 2, size / 2);
+        glVertex2f(-size / 2, size / 2);
         glEnd();
     }
 
     glPopMatrix();
 }
 
-void Shapes::drawTriangle(CameraSettings& cam)
+void Shapes::drawTriangle(CameraSettings& cam, MaterialProperty& mat_prop)
 {
     glPushMatrix();
     applyZoomAndRotation(cam);
 
-    glColor4f(this->color.x, this->color.y, this->color.z, this->color.w);
+    // Set material properties
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_prop.mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_prop.mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_prop.mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, &mat_prop.mat_shininess);
+
+    float base = 1.0f;
+    float height = 1.0f;
 
     if (this->is3D)
     {
-        // Draw a tetrahedron
         glBegin(GL_TRIANGLES);
+
         // Front face
-        glVertex3f(0.0f, 0.5f, 0.0f);
-        glVertex3f(-0.5f, -0.5f, 0.5f);
-        glVertex3f(0.5f, -0.5f, 0.5f);
+        glNormal3f(0.0f, 0.5f, 0.5f);
+        glVertex3f(0.0f, height / 2, 0.0f);
+        glVertex3f(-base / 2, -height / 2, base / 2);
+        glVertex3f(base / 2, -height / 2, base / 2);
+
         // Right face
-        glVertex3f(0.0f, 0.5f, 0.0f);
-        glVertex3f(0.5f, -0.5f, 0.5f);
-        glVertex3f(0.0f, -0.5f, -0.5f);
+        glNormal3f(0.5f, 0.5f, 0.0f);
+        glVertex3f(0.0f, height / 2, 0.0f);
+        glVertex3f(base / 2, -height / 2, base / 2);
+        glVertex3f(base / 2, -height / 2, -base / 2);
+
+        // Back face
+        glNormal3f(0.0f, 0.5f, -0.5f);
+        glVertex3f(0.0f, height / 2, 0.0f);
+        glVertex3f(base / 2, -height / 2, -base / 2);
+        glVertex3f(-base / 2, -height / 2, -base / 2);
+
         // Left face
-        glVertex3f(0.0f, 0.5f, 0.0f);
-        glVertex3f(0.0f, -0.5f, -0.5f);
-        glVertex3f(-0.5f, -0.5f, 0.5f);
+        glNormal3f(-0.5f, 0.5f, 0.0f);
+        glVertex3f(0.0f, height / 2, 0.0f);
+        glVertex3f(-base / 2, -height / 2, -base / 2);
+        glVertex3f(-base / 2, -height / 2, base / 2);
+
+        glEnd();
+
+        glBegin(GL_QUADS);
         // Bottom face
-        glVertex3f(-0.5f, -0.5f, 0.5f);
-        glVertex3f(0.5f, -0.5f, 0.5f);
-        glVertex3f(0.0f, -0.5f, -0.5f);
+        glNormal3f(0.0f, -1.0f, 0.0f);
+        glVertex3f(-base / 2, -height / 2, -base / 2);
+        glVertex3f(base / 2, -height / 2, -base / 2);
+        glVertex3f(base / 2, -height / 2, base / 2);
+        glVertex3f(-base / 2, -height / 2, base / 2);
         glEnd();
     }
     else
     {
         glBegin(GL_TRIANGLES);
-        glVertex2f(0.0f, 0.5f);
-        glVertex2f(-0.5f, -0.5f);
-        glVertex2f(0.5f, -0.5f);
+        glVertex2f(-base / 2, -height / 2);
+        glVertex2f(base / 2, -height / 2);
+        glVertex2f(0.0f, height / 2);
         glEnd();
     }
 
